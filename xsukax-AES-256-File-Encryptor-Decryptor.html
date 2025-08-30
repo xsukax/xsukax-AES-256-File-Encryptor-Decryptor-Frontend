@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>xsukax AES-256 File Encryptor/Decryptor Frontend</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1), transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.05), transparent 50%);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(-10%, -10%) rotate(0deg); }
+      50% { transform: translate(-5%, -5%) rotate(180deg); }
+    }
+
+    .container {
+      background: rgba(18, 18, 18, 0.8);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 60px 50px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 200;
+      letter-spacing: 2px;
+      margin-bottom: 40px;
+      text-align: center;
+      background: linear-gradient(90deg, #ffffff, #999999);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin: 24px 0;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: none;
+      transition: all 0.3s ease;
+    }
+
+    .progress-container.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-label {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .progress-percentage {
+      font-weight: 600;
+      color: #667eea;
+      font-size: 14px;
+    }
+
+    .progress-bar-wrapper {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 100px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      border-radius: 100px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .input-group {
+      margin-bottom: 24px;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: block;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+    }
+
+    .file-input-label:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .file-input-label.has-file {
+      color: #ffffff;
+      border-color: rgba(120, 119, 198, 0.5);
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+    }
+
+    input[type="password"]::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    input[type="password"]:focus {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    button {
+      padding: 18px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-encrypt {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-decrypt {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-encrypt:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+
+    .btn-decrypt:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .status.active {
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(120, 119, 198, 0.1);
+      border: 1px solid rgba(120, 119, 198, 0.3);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      transform: scale(0.9);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal.show .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-content p {
+      margin-bottom: 28px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .close-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 14px 40px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        padding: 40px 30px;
+      }
+      
+      h1 {
+        font-size: 20px;
+        letter-spacing: 1px;
+      }
+
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>xsukax AES-256 File Encryptor/Decryptor</h1>
+    
+    <div class="input-group">
+      <div class="file-input-wrapper">
+        <input type="file" id="fileInput" onchange="handleFileSelect(this)">
+        <label for="fileInput" class="file-input-label" id="fileLabel">
+          Choose file
+        </label>
+      </div>
+    </div>
+    
+    <div class="input-group">
+      <input type="password" id="password" placeholder="Enter password">
+    </div>
+    
+    <div class="button-group">
+      <button class="btn-encrypt" onclick="encryptFile()">Encrypt</button>
+      <button class="btn-decrypt" onclick="decryptFile()">Decrypt</button>
+    </div>
+    
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-label">
+        <span id="progressText">Processing...</span>
+        <span class="progress-percentage" id="progressPercentage">0%</span>
+      </div>
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+    
+    <div class="status" id="status">Ready to process</div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p id="modal-message"></p>
+      <button class="close-btn" onclick="closeModal()">OK</button>
+    </div>
+  </div>
+
+<script>
+function handleFileSelect(input) {
+  const label = document.getElementById('fileLabel');
+  if (input.files.length > 0) {
+    label.textContent = input.files[0].name;
+    label.classList.add('has-file');
+  } else {
+    label.textContent = 'Choose file';
+    label.classList.remove('has-file');
+  }
+}
+
+function showModal(message) {
+  const modal = document.getElementById("modal");
+  document.getElementById("modal-message").innerText = message;
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  const modal = document.getElementById("modal");
+  modal.classList.remove('show');
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 300);
+}
+
+function updateStatus(message, isActive = false) {
+  const status = document.getElementById("status");
+  status.innerText = message;
+  if (isActive) {
+    status.classList.add('active');
+    setTimeout(() => status.classList.remove('active'), 3000);
+  }
+}
+
+function showProgress(text = "Processing...") {
+  const container = document.getElementById("progressContainer");
+  const progressText = document.getElementById("progressText");
+  container.classList.add("active");
+  progressText.innerText = text;
+  updateProgress(0);
+}
+
+function hideProgress() {
+  const container = document.getElementById("progressContainer");
+  setTimeout(() => {
+    container.classList.remove("active");
+    updateProgress(0);
+  }, 500);
+}
+
+function updateProgress(percentage) {
+  const bar = document.getElementById("progressBar");
+  const percentageText = document.getElementById("progressPercentage");
+  bar.style.width = percentage + "%";
+  percentageText.innerText = percentage + "%";
+}
+
+async function simulateProgress(duration = 1000) {
+  const steps = 20;
+  const interval = duration / steps;
+  
+  for (let i = 0; i <= steps; i++) {
+    const progress = Math.min(95, (i / steps) * 100);
+    updateProgress(Math.round(progress));
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+}
+
+async function getKeyFromPassword(password, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 200000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+function supportsDownloadAttribute() {
+  const a = document.createElement('a');
+  return typeof a.download !== 'undefined';
+}
+
+function downloadFile(data, filename) {
+  const blob = new Blob([data instanceof Uint8Array ? data : new Uint8Array(data)], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.setAttribute('download', filename);
+  a.style.display = 'none';
+  document.body.appendChild(a);
+
+  if (supportsDownloadAttribute()) {
+    a.click();
+  } else {
+    window.location.href = url;
+  }
+
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+async function encryptFile() {
+  const file = document.getElementById("fileInput").files[0];
+  const password = document.getElementById("password").value;
+  
+  if (!file || !password) {
+    showModal("Please select a file and enter a password");
+    return;
+  }
+
+  showProgress("Encrypting file...");
+  updateStatus("Processing...");
+
+  try {
+    // Start progress simulation
+    const progressPromise = simulateProgress(800);
+    
+    const fileData = await file.arrayBuffer();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await getKeyFromPassword(password, salt);
+
+    await progressPromise; // Wait for progress to reach ~95%
+    
+    const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, fileData);
+
+    const combined = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
+    combined.set(salt, 0);
+    combined.set(iv, salt.byteLength);
+    combined.set(new Uint8Array(encrypted), salt.byteLength + iv.byteLength);
+
+    updateProgress(100); // Complete progress
+    
+    const outName = file.name.endsWith('.enc') ? file.name : file.name + ".enc";
+    downloadFile(combined, outName);
+    
+    setTimeout(() => {
+      hideProgress();
+      updateStatus("Encrypted: " + outName, true);
+    }, 500);
+  } catch (err) {
+    console.error(err);
+    hideProgress();
+    showModal('Encryption failed. Please try again.');
+    updateStatus("Ready to process");
+  }
+}
+
+async function decryptFile() {
+  const file = document.getElementById("fileInput").files[0];
+  const password = document.getElementById("password").value;
+  
+  if (!file || !password) {
+    showModal("Please select a file and enter a password");
+    return;
+  }
+
+  if (!file.name.endsWith(".enc")) {
+    showModal("Please select a .enc file to decrypt");
+    return;
+  }
+
+  showProgress("Decrypting file...");
+  updateStatus("Processing...");
+
+  try {
+    // Start progress simulation
+    const progressPromise = simulateProgress(800);
+    
+    const fileData = new Uint8Array(await file.arrayBuffer());
+    if (fileData.byteLength < 28) {
+      hideProgress();
+      showModal('Invalid encrypted file');
+      updateStatus("Ready to process");
+      return;
+    }
+
+    const salt = fileData.slice(0, 16);
+    const iv = fileData.slice(16, 28);
+    const ciphertext = fileData.slice(28);
+
+    await progressPromise; // Wait for progress to reach ~95%
+    
+    const key = await getKeyFromPassword(password, salt);
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+
+    updateProgress(100); // Complete progress
+    
+    const filename = file.name.slice(0, -4);
+    downloadFile(decrypted, filename);
+    
+    setTimeout(() => {
+      hideProgress();
+      updateStatus("Decrypted: " + filename, true);
+    }, 500);
+  } catch (e) {
+    console.error(e);
+    hideProgress();
+    showModal("Decryption failed. Wrong password or corrupted file.");
+    updateStatus("Ready to process");
+  }
+}
+</script>
+</body>
+</html>
