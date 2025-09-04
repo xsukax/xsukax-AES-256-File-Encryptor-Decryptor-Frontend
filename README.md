@@ -16,10 +16,10 @@ A **military-grade**, browser-based file encryption tool that provides **unbreak
 
 ### **Unbreakable Security**
 - 🔒 **AES-256-GCM Encryption** - The gold standard used by governments and military
-- 🔒 **PBKDF2 Key Derivation** - 200,000 iterations for maximum password security
-- 🔒 **Cryptographically Secure Random** - Unique salt and IV for every encryption
-- 🔒 **Web Crypto API** - Native browser cryptography for maximum performance
-- 🔒 **Authenticated Encryption** - GCM mode ensures data integrity and authenticity
+- 🔑 **PBKDF2 Key Derivation** - 200,000 iterations for maximum password security
+- 🎲 **Cryptographically Secure Random** - Unique salt and IV for every encryption
+- 🔐 **Web Crypto API** - Native browser cryptography for maximum performance
+- 🛡️ **Authenticated Encryption** - GCM mode ensures data integrity and authenticity
 
 ## ✨ Features
 
@@ -37,6 +37,49 @@ A **military-grade**, browser-based file encryption tool that provides **unbreak
 - **Mobile Responsive** - Perfect experience on phones and tablets
 - **Lightweight** - Single HTML file under 15KB
 - **Open Source** - Fully auditable code for transparency
+
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph "Browser Environment"
+        UI[User Interface]
+        FC[File Controller]
+        WC[Web Crypto API]
+        FS[File System API]
+    end
+    
+    subgraph "Security Layer"
+        PBKDF[PBKDF2 Key Derivation]
+        AES[AES-256-GCM]
+        RNG[Secure Random Generator]
+    end
+    
+    subgraph "Data Flow"
+        IF[Input File]
+        EF[Encrypted File .enc]
+        DF[Decrypted File]
+    end
+    
+    UI --> FC
+    FC --> WC
+    WC --> PBKDF
+    WC --> AES
+    WC --> RNG
+    
+    IF --> FC
+    FC --> EF
+    EF --> FC
+    FC --> DF
+    
+    FS --> IF
+    EF --> FS
+    DF --> FS
+    
+    style UI fill:#007AFF,stroke:#0051D5,stroke-width:2px,color:#fff
+    style WC fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style AES fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+```
 
 ## 🚀 Getting Started
 
@@ -65,12 +108,49 @@ Host it free on GitHub Pages for easy access from anywhere!
 ## 📖 How to Use
 
 ### **Encrypting Files**
+
+```mermaid
+flowchart LR
+    A[Select File] --> B[Enter Password]
+    B --> C{Password Valid?}
+    C -->|Yes| D[Generate Salt]
+    D --> E[Generate IV]
+    E --> F[Derive Key via PBKDF2]
+    F --> G[Encrypt with AES-256-GCM]
+    G --> H[Combine Salt + IV + Ciphertext]
+    H --> I[Download .enc File]
+    C -->|No| J[Show Error]
+    J --> B
+    
+    style A fill:#5AC8FA,stroke:#4BA7D8,stroke-width:2px
+    style I fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style J fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+```
+
 1. **Select File** - Click "Choose file" and select any file
 2. **Enter Password** - Create a strong password (remember it!)
 3. **Click Encrypt** - File processes locally with progress indicator
 4. **Save .enc File** - Encrypted file downloads automatically
 
 ### **Decrypting Files**
+
+```mermaid
+flowchart LR
+    A[Select .enc File] --> B[Enter Password]
+    B --> C[Extract Salt from File]
+    C --> D[Extract IV from File]
+    D --> E[Derive Key via PBKDF2]
+    E --> F[Decrypt with AES-256-GCM]
+    F --> G{Authentication Valid?}
+    G -->|Yes| H[Download Original File]
+    G -->|No| I[Show Error: Wrong Password]
+    I --> B
+    
+    style A fill:#5AC8FA,stroke:#4BA7D8,stroke-width:2px
+    style H fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style I fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+```
+
 1. **Select .enc File** - Choose your encrypted file
 2. **Enter Password** - Use the same password from encryption
 3. **Click Decrypt** - Original file restored perfectly
@@ -89,6 +169,30 @@ IV Size:          96 bits (12 bytes)
 Tag Size:         128 bits (16 bytes)
 ```
 
+### **Key Derivation Process**
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant B as Browser
+    participant WC as Web Crypto API
+    participant PBKDF as PBKDF2
+    
+    U->>B: Enter Password
+    B->>WC: Generate Random Salt (16 bytes)
+    WC-->>B: Salt
+    B->>WC: Import Password as Key Material
+    WC-->>B: Key Material
+    B->>PBKDF: Derive Key (200,000 iterations)
+    Note over PBKDF: SHA-256 Hash Function
+    PBKDF->>PBKDF: Iteration 1
+    PBKDF->>PBKDF: Iteration 2
+    PBKDF->>PBKDF: ...
+    PBKDF->>PBKDF: Iteration 200,000
+    PBKDF-->>B: AES-256 Key (256 bits)
+    B->>WC: Use Key for Encryption
+```
+
 ### **Security Architecture**
 - **Salt**: Random 16-byte value unique per file prevents rainbow table attacks
 - **IV**: Random 12-byte initialization vector ensures identical files encrypt differently
@@ -96,12 +200,64 @@ Tag Size:         128 bits (16 bytes)
 - **GCM Mode**: Provides both confidentiality and authenticity verification
 
 ### **File Structure**
+
+```mermaid
+graph LR
+    subgraph "Encrypted File Format (.enc)"
+        A[Salt<br/>16 bytes] --> B[IV<br/>12 bytes]
+        B --> C[Ciphertext + Auth Tag<br/>Variable length]
+    end
+    
+    style A fill:#FF9500,stroke:#E68600,stroke-width:2px
+    style B fill:#5AC8FA,stroke:#4BA7D8,stroke-width:2px
+    style C fill:#007AFF,stroke:#0051D5,stroke-width:2px
+```
+
 ```
 Encrypted File Format (.enc):
 [Salt (16 bytes)][IV (12 bytes)][Encrypted Data + Auth Tag]
 ```
 
 ## 🛡️ Security Guarantees
+
+### **Security Model**
+
+```mermaid
+graph TD
+    subgraph "Threats Protected Against"
+        BF[Brute Force Attacks]
+        DA[Dictionary Attacks]
+        PA[Pattern Analysis]
+        TD[Data Tampering]
+        SC[Side-Channel Attacks]
+    end
+    
+    subgraph "Protection Mechanisms"
+        PBKDF2[200,000 PBKDF2 Iterations]
+        SALT[Unique Salt per File]
+        IV[Random IV]
+        GCM[GCM Auth Tag]
+        CT[Constant-Time Ops]
+    end
+    
+    BF --> PBKDF2
+    DA --> SALT
+    PA --> IV
+    TD --> GCM
+    SC --> CT
+    
+    style BF fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+    style DA fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+    style PA fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+    style TD fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+    style SC fill:#d70015,stroke:#b8000f,stroke-width:2px,color:#fff
+    
+    style PBKDF2 fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style SALT fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style IV fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style GCM fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+    style CT fill:#32a852,stroke:#2d9749,stroke-width:2px,color:#fff
+```
 
 ### **What We Protect**
 - ✅ **File Contents** - Encrypted with military-grade AES-256
@@ -119,12 +275,47 @@ Encrypted File Format (.enc):
 
 ## 🔍 Privacy Features
 
-### **Zero-Knowledge Proof**
-- No account creation = No user tracking
-- No cloud storage = No data mining
-- No cookies = No behavioral analysis
-- No external requests = No IP logging
-- No JavaScript frameworks = No supply chain risks
+### **Zero-Knowledge Architecture**
+
+```mermaid
+graph TB
+    subgraph "Your Device"
+        F[Your Files]
+        P[Your Password]
+        E[Encryption Process]
+        D[Decryption Process]
+    end
+    
+    subgraph "What Leaves Your Device"
+        N[NOTHING]
+    end
+    
+    subgraph "External Servers"
+        NS[No Server Contact]
+        NC[No Cloud Storage]
+        NA[No Analytics]
+        NT[No Tracking]
+    end
+    
+    F --> E
+    P --> E
+    E --> F
+    
+    F --> D
+    P --> D
+    D --> F
+    
+    N -.->|❌| NS
+    N -.->|❌| NC
+    N -.->|❌| NA
+    N -.->|❌| NT
+    
+    style N fill:#32a852,stroke:#2d9749,stroke-width:3px,color:#fff
+    style NS fill:#f5f5f7,stroke:#d2d2d7,stroke-width:2px
+    style NC fill:#f5f5f7,stroke:#d2d2d7,stroke-width:2px
+    style NA fill:#f5f5f7,stroke:#d2d2d7,stroke-width:2px
+    style NT fill:#f5f5f7,stroke:#d2d2d7,stroke-width:2px
+```
 
 ### **Complete Transparency**
 - 100% open source code
