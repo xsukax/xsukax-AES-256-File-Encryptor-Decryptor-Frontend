@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>xsukax AES-256 File Encryptor/Decryptor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.47059;
+      font-weight: 400;
+      letter-spacing: -0.022em;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, #007AFF, #5AC8FA);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
+    }
+
+    .logo svg {
+      width: 28px;
+      height: 28px;
+      fill: white;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1d1d1f;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #86868b;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 13px;
+      color: #86868b;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 12px 16px;
+      background: #ffffff;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 15px;
+      color: #1d1d1f;
+    }
+
+    .file-input-button:hover {
+      border-color: #007AFF;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .file-input-button.has-file {
+      background: #f5f5f7;
+      border-color: #007AFF;
+    }
+
+    .file-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+      fill: #007AFF;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      background: #ffffff;
+      border: 1px solid #d2d2d7;
+      border-radius: 10px;
+      color: #1d1d1f;
+      font-size: 15px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    input[type="password"]::placeholder {
+      color: #86868b;
+    }
+
+    input[type="password"]:focus {
+      border-color: #007AFF;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: #007AFF;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0051D5;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #007AFF;
+      border: 1px solid #007AFF;
+    }
+
+    .btn-secondary:hover {
+      background: #007AFF;
+      color: white;
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.98);
+    }
+
+    /* Progress */
+    .progress-container {
+      margin: 24px 0;
+      padding: 16px;
+      background: #f5f5f7;
+      border-radius: 10px;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+
+    .progress-container.active {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-label {
+      font-size: 13px;
+      color: #1d1d1f;
+      font-weight: 500;
+    }
+
+    .progress-percentage {
+      font-size: 13px;
+      color: #007AFF;
+      font-weight: 600;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: #d2d2d7;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #007AFF;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 12px 16px;
+      background: #f5f5f7;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #86868b;
+      text-align: center;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .status.success {
+      background: #e8f5e8;
+      color: #32a852;
+    }
+
+    .status.error {
+      background: #fff0f0;
+      color: #d70015;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .modal.show {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 14px;
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: #f5f5f7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: #86868b;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+    }
+
+    .modal-message {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #86868b;
+      margin-bottom: 24px;
+    }
+
+    .modal-button {
+      width: 100%;
+      padding: 10px 20px;
+      background: #007AFF;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .modal-button:hover {
+      background: #0051D5;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 32px 24px;
+      }
+      
+      h1 {
+        font-size: 20px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <h1>xsukax AES-256 File Encryptor/Decryptor</h1>
+    
+    <div class="input-group">
+      <label class="input-label">Select File</label>
+      <div class="file-input-wrapper">
+        <input type="file" id="fileInput" onchange="handleFileSelect(this)">
+        <label for="fileInput" class="file-input-button" id="fileLabel">
+          <svg class="file-icon" viewBox="0 0 24 24">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+          </svg>
+          <span id="fileLabelText">Choose File</span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="input-group">
+      <label class="input-label">Password</label>
+      <input type="password" id="password" placeholder="Enter a secure password">
+    </div>
+    
+    <div class="button-group">
+      <button class="btn-primary" onclick="encryptFile()">Encrypt</button>
+      <button class="btn-secondary" onclick="decryptFile()">Decrypt</button>
+    </div>
+    
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-info">
+        <span class="progress-label" id="progressText">Processing...</span>
+        <span class="progress-percentage" id="progressPercentage">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+    
+    <div class="status" id="status">Ready</div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10-4.48 10-10S17.52,2 12,2zm1,15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+      </div>
+      <div class="modal-title">Notice</div>
+      <div class="modal-message" id="modal-message"></div>
+      <button class="modal-button" onclick="closeModal()">OK</button>
+    </div>
+  </div>
+
+<script>
+function handleFileSelect(input) {
+  const labelText = document.getElementById('fileLabelText');
+  const fileButton = document.getElementById('fileLabel');
+  
+  if (input.files.length > 0) {
+    const fileName = input.files[0].name;
+    const maxLength = 30;
+    const displayName = fileName.length > maxLength 
+      ? fileName.substring(0, maxLength - 3) + '...' 
+      : fileName;
+    labelText.textContent = displayName;
+    fileButton.classList.add('has-file');
+  } else {
+    labelText.textContent = 'Choose File';
+    fileButton.classList.remove('has-file');
+  }
+}
+
+function showModal(message) {
+  const modal = document.getElementById("modal");
+  document.getElementById("modal-message").innerText = message;
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  const modal = document.getElementById("modal");
+  modal.classList.remove('show');
+}
+
+function updateStatus(message, type = '') {
+  const status = document.getElementById("status");
+  status.innerText = message;
+  status.className = 'status';
+  
+  if (type) {
+    status.classList.add(type);
+    setTimeout(() => {
+      status.className = 'status';
+      status.innerText = 'Ready';
+    }, 3000);
+  }
+}
+
+function showProgress(text = "Processing...") {
+  const container = document.getElementById("progressContainer");
+  const progressText = document.getElementById("progressText");
+  container.classList.add("active");
+  progressText.innerText = text;
+  updateProgress(0);
+}
+
+function hideProgress() {
+  const container = document.getElementById("progressContainer");
+  setTimeout(() => {
+    container.classList.remove("active");
+    updateProgress(0);
+  }, 300);
+}
+
+function updateProgress(percentage) {
+  const bar = document.getElementById("progressBar");
+  const percentageText = document.getElementById("progressPercentage");
+  bar.style.width = percentage + "%";
+  percentageText.innerText = percentage + "%";
+}
+
+async function simulateProgress(duration = 1000) {
+  const steps = 20;
+  const interval = duration / steps;
+  
+  for (let i = 0; i <= steps; i++) {
+    const progress = Math.min(95, (i / steps) * 100);
+    updateProgress(Math.round(progress));
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+}
+
+async function getKeyFromPassword(password, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 200000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+function downloadFile(data, filename) {
+  const blob = new Blob([data instanceof Uint8Array ? data : new Uint8Array(data)], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+async function encryptFile() {
+  const file = document.getElementById("fileInput").files[0];
+  const password = document.getElementById("password").value;
+  
+  if (!file) {
+    showModal("Please select a file to encrypt");
+    return;
+  }
+  
+  if (!password) {
+    showModal("Please enter a password");
+    return;
+  }
+  
+  if (password.length < 8) {
+    showModal("Password should be at least 8 characters long for better security");
+    return;
+  }
+
+  showProgress("Encrypting file...");
+  updateStatus("Encrypting...");
+
+  try {
+    const progressPromise = simulateProgress(800);
+    
+    const fileData = await file.arrayBuffer();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await getKeyFromPassword(password, salt);
+
+    await progressPromise;
+    
+    const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, fileData);
+
+    const combined = new Uint8Array(salt.byteLength + iv.byteLength + encrypted.byteLength);
+    combined.set(salt, 0);
+    combined.set(iv, salt.byteLength);
+    combined.set(new Uint8Array(encrypted), salt.byteLength + iv.byteLength);
+
+    updateProgress(100);
+    
+    const outName = file.name.endsWith('.enc') ? file.name : file.name + ".enc";
+    downloadFile(combined, outName);
+    
+    setTimeout(() => {
+      hideProgress();
+      updateStatus("File encrypted successfully", "success");
+    }, 300);
+  } catch (err) {
+    console.error(err);
+    hideProgress();
+    showModal('Encryption failed. Please try again.');
+    updateStatus("Encryption failed", "error");
+  }
+}
+
+async function decryptFile() {
+  const file = document.getElementById("fileInput").files[0];
+  const password = document.getElementById("password").value;
+  
+  if (!file) {
+    showModal("Please select a file to decrypt");
+    return;
+  }
+  
+  if (!password) {
+    showModal("Please enter the password");
+    return;
+  }
+
+  if (!file.name.endsWith(".enc")) {
+    showModal("Please select an encrypted file (.enc)");
+    return;
+  }
+
+  showProgress("Decrypting file...");
+  updateStatus("Decrypting...");
+
+  try {
+    const progressPromise = simulateProgress(800);
+    
+    const fileData = new Uint8Array(await file.arrayBuffer());
+    if (fileData.byteLength < 28) {
+      hideProgress();
+      showModal('Invalid encrypted file');
+      updateStatus("Invalid file", "error");
+      return;
+    }
+
+    const salt = fileData.slice(0, 16);
+    const iv = fileData.slice(16, 28);
+    const ciphertext = fileData.slice(28);
+
+    await progressPromise;
+    
+    const key = await getKeyFromPassword(password, salt);
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+
+    updateProgress(100);
+    
+    const filename = file.name.slice(0, -4);
+    downloadFile(decrypted, filename);
+    
+    setTimeout(() => {
+      hideProgress();
+      updateStatus("File decrypted successfully", "success");
+    }, 300);
+  } catch (e) {
+    console.error(e);
+    hideProgress();
+    showModal("Decryption failed. Please check your password.");
+    updateStatus("Decryption failed", "error");
+  }
+}
+
+// Add keyboard support
+document.getElementById('password').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    const file = document.getElementById("fileInput").files[0];
+    if (file && file.name.endsWith('.enc')) {
+      decryptFile();
+    } else {
+      encryptFile();
+    }
+  }
+});
+</script>
+</body>
+</html>
