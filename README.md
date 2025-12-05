@@ -84,7 +84,7 @@ graph TB
 ## 🚀 Getting Started
 
 ### **Option 1: Direct Usage**
-1. Download the `xsukax-AES-256-File-Encryptor-Decryptor.html` file
+1. Download the `index.html` file
 2. Open it in any modern web browser
 3. Start encrypting - no installation needed!
 
@@ -97,7 +97,7 @@ git clone https://github.com/xsukax/xsukax-AES-256-File-Encryptor-Decryptor-Fron
 cd xsukax-AES-256-File-Encryptor-Decryptor-Frontend
 
 # Open in browser
-open xsukax-AES-256-File-Encryptor-Decryptor.html
+open index.html
 # or serve it locally
 python -m http.server 8000
 ```
